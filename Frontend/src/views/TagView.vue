@@ -100,6 +100,7 @@ export default {
       }
     },
     SUBJECTS() {
+      this.search = "";
       fetch(`http://127.0.0.1:5500/api/tag/subject`, {
         method: "GET",
         headers: {
@@ -122,6 +123,7 @@ export default {
         .catch((err) => console.log(err));
     },
     SECONDARY() {
+      this.search = "";
       fetch(`http://127.0.0.1:5500/api/tag/secondary`, {
         method: "GET",
         headers: {

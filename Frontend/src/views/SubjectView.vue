@@ -132,20 +132,16 @@ export default {
     },
   },
 
-
   beforeMount() {
     if (localStorage.getItem('access_token') == null) {
       alert("Login first");
       return router.push("/");
     }
     if (localStorage.getItem('role') == 'staff' && localStorage.getItem('subject_name') != this.subject_name) {
-      alert("You are not authorised to change url and access other subject page")
-      localStorage.clear()
+      alert("You are not authorised to change url and access other subject page");
+      localStorage.clear();
       return router.push(`/`);
-
-
     }
-
     this.FAQ();
   },
 };

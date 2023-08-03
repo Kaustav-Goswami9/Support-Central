@@ -41,10 +41,10 @@
           </div>
         </div>
       </div>
-      <div v-if="role == 'admin'" class="d-flex ms-2 align-items-center justify-content-center"><i
-          @click="Delete(ticket_details.ticket_id)" class="bi bi-trash-fill text-danger" style="font-size: 2rem"
-          data-toggle="tooltip" data-placement="top" title="Delete"></i></div>
-
+      <div v-if="role == 'admin'" class="d-flex ms-2 align-items-center justify-content-center">
+        <i @click="Delete(ticket_details.ticket_id)" class="bi bi-trash-fill text-danger" style="font-size: 2rem"
+          data-toggle="tooltip" data-placement="top" title="Delete"></i>
+      </div>
     </div>
 
     <div class="d-flex justify-content-end">
@@ -127,7 +127,6 @@ import NavBar from "@/components/NavBar.vue";
 import router from '@/router';
 
 export default {
-
   name: "TicketView",
   components: { NavBar },
   data: function () {

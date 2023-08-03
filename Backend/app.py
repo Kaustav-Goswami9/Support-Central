@@ -24,13 +24,13 @@ api = Api(app)
 
 app.config['SECRET_KEY'] = 'FMM-2'
 CORS(app)
-JWTManager(app)
+jwt = JWTManager(app)
 db.init_app(app)
 app.app_context().push()
 db.create_all()
 
 # API URLS
-api.add_resource(Login_api, '/api/register', '/api/login/<string:email>')
+api.add_resource(Login_api, '/api/register', '/api/user')
 api.add_resource(Role_api, '/api/role', '/api/role/<int:user_id>')
 api.add_resource(Ticket_api, '/api/subject/ticket/<int:ticket_id>',
                  '/api/subject/<string:subject_name>')
@@ -40,6 +40,12 @@ api.add_resource(Tag_api,
                  '/api/tag/<string:tag_type>', '/api/tag/<string:tag_type>/<int:tag_id>')
 
 # Controllers
+
+
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data):
+    identity = jwt_data["sub"]
+    return User.query.filter_by(username=identity).one_or_none()
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -62,7 +68,8 @@ def login():
                 expire_time = datetime.timedelta(days=1)
                 access_token = create_access_token(
                     identity=username, expires_delta=expire_time)
-                return {'access_token': access_token, 'role': user.role, "user_id": user.user_id, "subject_name": Subject_Tag.query.filter_by(subject_id=staff.subject_id).first().subject_name}, 200
+                return {'access_token': access_token, 'role': user.role, "user_id": user.user_id,
+                        "subject_name": Subject_Tag.query.filter_by(subject_id=staff.subject_id).first().subject_name}, 200
 
         expire_time = datetime.timedelta(days=1)
         access_token = create_access_token(

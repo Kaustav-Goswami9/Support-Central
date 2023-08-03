@@ -73,6 +73,7 @@ export default {
             this.filtered_list = this.role_list.filter(x => x.username.toLowerCase().includes(this.search.toLowerCase()))
         },
         APPROVED() {
+            this.search = "";
             fetch(`http://127.0.0.1:5500/api/role?status=1`, {
                 method: 'GET',
                 headers: {
@@ -89,6 +90,7 @@ export default {
                 .catch((err) => console.log(err));
         },
         UNAPPROVED() {
+            this.search = "";
             fetch(`http://127.0.0.1:5500/api/role?status=0`, {
                 method: 'GET',
                 headers: {

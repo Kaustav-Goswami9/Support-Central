@@ -1,7 +1,8 @@
 import datetime
 
 from flask import request
-from flask_jwt_extended import create_access_token, jwt_required
+from flask_jwt_extended import (create_access_token, get_current_user,
+                                jwt_required)
 from flask_restful import Resource, fields, marshal_with
 from werkzeug.security import generate_password_hash
 
@@ -13,16 +14,15 @@ class Login_api(Resource):
     '''Api code for Login Manager'''
 
     output = {"user_id": fields.Integer, "username": fields.String,
-              "email": fields.String, "password": fields.String,
-              "role": fields.String, "approved": fields.Boolean(attribute='status')}
+              "email": fields.String, "role": fields.String,
+              "approved": fields.Boolean(attribute='status')}
 
     @jwt_required()
     @marshal_with(output)
-    def get(self, email: str):
-        '''Returns the User details for the given email'''
+    def get(self):
+        '''Returns the User details for the current user'''
 
-        obj = User.query.filter_by(email=email).first()
-
+        obj = get_current_user()  # get the current user object
         # Checking whether user record is present
         if obj is None:
             raise DataError(status_code=404)
@@ -35,35 +35,40 @@ class Login_api(Resource):
 
     @jwt_required
     @marshal_with(output)
-    def put(self, email: str):
-        '''Modifies the User details for the given email'''
+    def put(self):
+        '''Modifies the User details for the current user'''
 
-        obj = User.query.filter_by(email=email).first()
+        obj = get_current_user()
         form = request.get_json()
 
         # Checking whether user record is present
         if obj is None:
             raise DataError(status_code=404)
+
         # Input data checking
-        if form.get('password') is None or type(form.get('password')) != str or len(form.get('password')) <= 4:
-            raise LogicError(status_code=400, error_code="USER002",
-                             error_msg="Password is required and must be string with length>4.")
-        else:
-            obj.password = form.get("password")
-        if form.get('role') is None or type(form.get('role')) != str:
-            raise LogicError(status_code=400, error_code="USER004",
-                             error_msg="Role is required and must be a non empty string.")
-        else:
-            obj.role = form.get("role", None)
+        if form.get('password') is None and form.get('role') is None:
+            raise DataError(status_code=400)
+        if form.get('password') is not None:
+            if type(form.get('password')) != str or len(form.get('password')) <= 4:
+                raise LogicError(status_code=400, error_code="USER002",
+                                 error_msg="Password must be string with length>4.")
+            else:
+                obj.password = form.get("password")
+        if form.get('role') is not None:
+            if type(form.get('role')) != str or len(form.get('role')) == 0:
+                raise LogicError(status_code=400, error_code="USER004",
+                                 error_msg="Role must be a non empty string.")
+            else:
+                obj.role = form.get("role", None)
 
         db.session.commit()
         return obj, 202
 
     @jwt_required()
-    def delete(self, email: str):
-        '''Deletes the User details for the given email'''
+    def delete(self):
+        '''Deletes the current user details'''
 
-        obj = User.query.filter_by(email=email).first()
+        obj = get_current_user()
 
         if obj.role == 'staff':
             obj = Staff.query.filter_by(user_id=obj.user_id).first()
@@ -80,8 +85,8 @@ class Login_api(Resource):
 
         form = request.get_json()
 
-        # Checking whether a user record with same email is present
-        if User.query.filter_by(email=form.get('email')).first():
+        # Checking whether a user record with same username is present
+        if User.query.filter_by(username=form.get('username')).first():
             raise DataError(status_code=409)
 
         # If role=staff then insert tag-id into Staff table
@@ -114,6 +119,9 @@ class Login_api(Resource):
         db.session.add(obj)
         db.session.commit()
         expire_time = datetime.timedelta(days=5)
-        access_token = create_access_token(
-            identity=form.get('username'), expires_delta=expire_time)
-        return {'access_token': access_token, "username": obj.username, "password": obj.password, "role": obj.role, "user_id": obj.user_id}, 200
+        access_token = create_access_token(identity=form.get('username'),
+                                           expires_delta=expire_time)
+
+        if obj.role == 'staff':  # Checking for role=staff then return subject_id in response
+            return {'access_token': access_token, "role": obj.role, "user_id": obj.user_id, "subject_id": obj.subject_id}, 200
+        return {'access_token': access_token, "role": obj.role, "user_id": obj.user_id}, 200

@@ -8,6 +8,9 @@
     <span class="text-center" v-else>
       <p class="h1 pt-2">{{ title }}</p>
     </span>
+    <div class="position-absolute top-0 end-0 mt-3 me-5">
+      <ProfileIcon />
+    </div>
     <div class="position-relative ms-4 me-4 pb-3">
       <span>
         <router-link to="/dash" v-if="role == 'student'">
@@ -24,19 +27,17 @@
         <input class="search" type="text" id="search" placeholder="Search here...." v-model="search" />
         <button type="submit" class="btn btn-link"> <i class="bi bi-search"></i> </button>
       </form>
-      <div class="position-absolute top-0 end-0 mt-3">
-        <button @click="logout" style="font-size: large; color: whitesmoke" class="btn btn-danger">
-          Logout <i class="bi bi-box-arrow-right"></i>
-        </button>
-      </div>
-      <!-- <hr class="border border-primary border-2 opacity-100" /> -->
     </div>
   </header>
 </template>
 <script>
 import router from "@/router";
+import ProfileIcon from "@/components/ProfileIcon.vue";
 export default {
   name: "NavBar",
+  components: {
+    ProfileIcon,
+  },
   data() {
     return {
       search: "",
@@ -48,10 +49,6 @@ export default {
   methods: {
     search_function() {
       return router.push(`/search/${this.search}`)
-    },
-    logout() {
-      localStorage.clear();
-      return router.push("/");
     },
   },
 };
